@@ -10,13 +10,13 @@
 .. module:: minimongo
 	 :synopsis: Minimal database Model management for MongoDB.
 
-.. moduleauthor:: Steve Lacy <github@slacy.com>
+.. moduleauthor:: Steve Lacy, Dmitrii Vlasov <yablokoff.tlt@gmail.com>
 .. moduleauthor:: Sergei Lebedev <superbobry@gmail.com>
 
-:Author: Steve Lacy <github@slacy.com>
+:Author: Steve Lacy, Dmitrii Vlasov <yablokoff.tlt@gmail.com>
 :Version: |release|
-:Source: `github.com <https://github.com/slacy/minimongo>`_
-:Bug tracker: `github.com/issues <https://github.com/slacy/minimongo/issues>`_
+:Source: `github.com <https://github.com/yablokoff/minimongo>`_
+:Bug tracker: `github.com/issues <https://github.com/yablokoff/minimongo/issues>`_
 
 ``minimongo`` is a lightweight, schemaless, Pythonic Object-Oriented
 interface to MongoDB.
@@ -39,7 +39,13 @@ Features
   the names and types of your fields. ``minimongo`` takes a minimalist and flexible
   approach to schemas.  You can set any value on any Minimongo-derived object.
 
-* **Automatic MongoDB Connection mangagement and connection pooling**
+* **Simple Database consistency**
+
+  Although ``minimongo`` doesn't require to pre-declare fields, it has simple
+  facility to maintain data consistency with DBRefs. You can specify relational fields
+  and action on delete - ``NOTHING``, ``NULLIFY``, ``DENY``  and ``CASCADE``.
+
+* **Automatic MongoDB Connection management and connection pooling**
 
   ``minimongo`` automatically connects to your database for you, and has its
   own simple Connection pool. Connections are persistent and last the lifetime

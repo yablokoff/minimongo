@@ -2,7 +2,7 @@ minimongo
 =========
 
 :Info: Minimal database Model management for MongoDB.
-:Author: Steve Lacy (github@slacy.com)
+:Author: Steve Lacy, Dmitrii Vlasov <yablokoff.tlt@gmail.com>
 
 
 About
@@ -12,8 +12,8 @@ About
 interface to MongoDB.
 
 It provides a very thin, dynamicly typed (schema-less) object management
-layer for any data stored in any MongoDB collection. ``minimongo`` directly
-calls the existing pymongo_ query syntax.
+layer with simple consistency for any data stored in any MongoDB collection.
+``minimongo`` directly calls the existing pymongo_ query syntax.
 
 ``minimongo`` can easily layer on top of existing MongoDB collections, and
 will work properly with almost any existing schema, even from third party
@@ -25,7 +25,7 @@ Installation
 
 If you have `setuptools <http://peak.telecommunity.com/DevCenter/setuptools>`_
 you can use ``easy_install -U minimongo``. Otherwise, you can download the
-source from `GitHub <http://github.com/slacy/minimongo>`_ and run ``python
+source from `GitHub <http://github.com/yablokoff/minimongo>`_ and run ``python
 setup.py install``.
 
 
@@ -70,10 +70,3 @@ a field, and then saving it back again::
         foo.save()
 
 
-Feedback welcome!
------------------
-
-Please email github@slacy.com with comments, suggestions, or comment via
-http://github.com/slacy/minimongo
-
-.. _pymongo: http://api.mongodb.org/python/1.9%2B/index.html

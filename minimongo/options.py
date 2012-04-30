@@ -23,7 +23,7 @@ def configure(module=None, prefix='MONGODB_', **kwargs):
         # to _Options' values, ex: MONGODB_PORT ==> port.
         attrs = module.__dict__.iteritems()
         attrs = ((attr.replace(prefix, '').lower(), value)
-                 for attr, value in attrs if attr.startwith(prefix))
+                 for attr, value in attrs if attr.startswith(prefix))
 
         _Options._configure(**dict(attrs))
     elif kwargs:
@@ -64,6 +64,8 @@ class _Options(object):
     # Is this an interface (i.e. will we derive from it and declare Meta
     # properly in the subclasses.)
     interface = False
+
+    references = ()
 
     def __init__(self, meta):
         if meta is not None:

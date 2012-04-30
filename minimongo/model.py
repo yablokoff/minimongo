@@ -3,10 +3,15 @@ import copy
 
 import re
 from bson import DBRef, ObjectId
-from minimongo.collection import DummyCollection
-from minimongo.options import _Options
 from pymongo import Connection
+from minimongo.collection import DummyCollection
+from minimongo.exceptions import ExistingReferencesError
+from minimongo.options import _Options
 
+NULLIFY     = 0
+DENY        = 1
+CASCADE     = 2
+NOTHING     = 3
 
 class ModelBase(type):
     """Metaclass for all models.
@@ -66,9 +71,16 @@ class ModelBase(type):
         new_class.database = connection[options.database]
         new_class.collection = options.collection_class(
             new_class.database, options.collection, document_class=new_class)
+        new_class.backward_references = []
 
         if options.auto_index:
             new_class.auto_index()   # Generating required indices.
+
+        if options.references:
+            for reference in options.references:
+                if len(reference) == 3:
+                    field_name, backward_reference_cls, type = reference
+                    backward_reference_cls.add_backward_reference(field_name=field_name, referent_cls=new_class, type=type)
 
         return new_class
 
@@ -166,7 +178,7 @@ class Model(AttrDict):
         return str(self).decode('utf-8')
 
     def __setitem__(self, key, value):
-        # Go through the defined list of field mappers.  If the fild
+        # Go through the defined list of field mappers.  If the field
         # matches, then modify the field value by calling the function in
         # the mapper.  Mapped fields must have a different type than their
         # counterpart, otherwise they'll be mapped more than once as they
@@ -199,7 +211,28 @@ class Model(AttrDict):
 
     def remove(self):
         """Remove this object from the database."""
+        if self.__class__.backward_references:
+            self.remove_backward_refs(self.__class__.backward_references)
         return self.collection.remove(self._id)
+
+    def remove_backward_refs(self, backward_refs):
+        dbref_to_self = self.dbref()
+        for backward_ref in backward_refs:
+            field_name, backward_ref_cls = backward_ref[0], backward_ref[1]
+            if backward_ref[2] == NOTHING:
+                continue
+            elif backward_ref[2] == CASCADE:
+                docs = backward_ref_cls.collection.remove({field_name:dbref_to_self})
+            else:
+                docs = backward_ref_cls.collection.find({field_name:dbref_to_self})
+                if backward_ref[2] == NULLIFY:
+                    for doc in docs:
+                        delattr(doc, field_name)
+                        doc.save()
+                    print docs.count()
+                elif backward_ref[2] == DENY:
+                    if docs.count() > 0:
+                        raise ExistingReferencesError("In %s.%s" % (backward_ref_cls.__name__, field_name))
 
     def mongo_update(self, values=None, **kwargs):
         """Update database data with object data."""
@@ -230,6 +263,10 @@ class Model(AttrDict):
         # Merge the loaded values with whatever is currently in self.
         self.update(values)
         return self
+
+    @classmethod
+    def add_backward_reference(cls, field_name, referent_cls, type):
+        cls.backward_references.append( (field_name, referent_cls, type) )
 
 
 # Utils.
