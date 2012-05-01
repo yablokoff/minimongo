@@ -172,4 +172,4 @@ Additional Info
 ---------------
 
 Please see unittests for additional usage scenarios, and feel free to contact me
-at github@slacy.com with any feature requests or additions you'd like to see.
+at yablokoff.tlt@gmail.com with any feature requests or additions you'd like to see.

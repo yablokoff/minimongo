@@ -1,1 +1,2 @@
-Changes
+v0.1.0, 01.05.2012 -- initial release
+v0.1.2, 01.05.2012 -- correct package structure formed

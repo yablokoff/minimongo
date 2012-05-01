@@ -1,7 +1,9 @@
+mimimongo.egg-info/
 *.pyc
 *~
+.idea/
 build/
 dist/
-minimongo.egg-info/
 minimongo/app_config.py
+minimongo/config_options.py
 pymongo-*/

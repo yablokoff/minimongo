@@ -31,7 +31,7 @@ setup.py install``.
 
 Dependencies
 ============
-- pymongo_ 1.9+
+- pymongo_ 2.1+
 - `sphinx <http://sphinx.pocoo.org>`_ (optional -- for documentation generation)
 
 

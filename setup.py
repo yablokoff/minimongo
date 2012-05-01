@@ -17,7 +17,7 @@ DESCRIPTION = "Minimal database Model management for MongoDB"
 try:
     LONG_DESCRIPTION = open(os.path.join(here, "README.rst")).read()
 except IOError:
-    pass
+    LONG_DESCRIPTION = ""
 
 
 CLASSIFIERS = (
@@ -42,21 +42,21 @@ class PyTest(Command):
 
 requires = ["pymongo"]
 
-setup(name="minimongo",
-      version="0.2.6",
+setup(name="mimimongo",
+      version="0.1.2",
       packages=find_packages(),
       cmdclass={"test": PyTest},
       platforms=["any"],
 
-      install_requires = ["pymongo>=1.9"],
+      install_requires = ["pymongo>=2.1"],
       zip_safe=False,
       include_package_data=True,
 
-      author="Steve Lacy",
-      author_email="slacy@slacy.com",
+      author="Steve Lacy, Dmitrii Vlasov",
+      author_email="yablokoff.tlt@gmail.com",
       description=DESCRIPTION,
       long_description=LONG_DESCRIPTION,
       classifiers=CLASSIFIERS,
       keywords=["mongo", "mongodb", "pymongo", "orm"],
-      url="http://github.com/slacy/minimongo",
+      url="http://github.com/yablokoff/minimongo",
 )
