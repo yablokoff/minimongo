@@ -7,6 +7,8 @@ import pytest
 
 from bson import DBRef
 from minimongo import Collection, Index, Model
+from minimongo.model import CASCADE, DENY, NOTHING, NULLIFY
+from minimongo.exceptions import ExistingReferencesError
 from pymongo.errors import DuplicateKeyError
 
 
@@ -83,6 +85,42 @@ class TestFieldMapper(Model):
              lambda v: float(v * (4.0 / 3.0))),
         )
 
+class TestReferenceObject(Model):
+    class Meta:
+        database = 'minimongo_test'
+        collection = 'minimongo_ref_obj'
+
+class TestReferenceSubjectNothing(Model):
+    class Meta:
+        database = 'minimongo_test'
+        collection = 'minimongo_ref_subj_nothing'
+        references = (
+            ("ref_field", TestReferenceObject, NOTHING),
+        )
+
+class TestReferenceSubjectDeny(Model):
+    class Meta:
+        database = 'minimongo_test'
+        collection = 'minimongo_ref_subj_deny'
+        references = (
+            ("ref_field", TestReferenceObject, DENY),
+            )
+
+class TestReferenceSubjectNullify(Model):
+    class Meta:
+        database = 'minimongo_test'
+        collection = 'minimongo_ref_subj_nullify'
+        references = (
+            ("ref_field", TestReferenceObject, NULLIFY),
+            )
+
+class TestReferenceSubjectCascade(Model):
+    class Meta:
+        database = 'minimongo_test'
+        collection = 'minimongo_ref_subj_cascade'
+        references = (
+            ("ref_field", TestReferenceObject, CASCADE),
+            )
 
 def setup():
     # Make sure we start with a clean, empty DB.
@@ -197,6 +235,17 @@ def test_mongo_update():
     assert model.counter == 11
     assert model.x == 0
     assert model.y == 1
+
+    # this should be done to update local copy after mongo_update
+    model.mongo_update({'$inc': {'counter': 1}})
+    assert model.counter == 11
+    model.load({"counter":1})
+    assert model.counter == 12
+
+    # call mongo_update with no args
+    model_copy = TestModel.collection.find_one({'_id': model._id})
+    model.mongo_update()
+    assert model == model_copy
 
 
 def test_load():
@@ -445,6 +494,54 @@ def test_dbref():
     ref_a = object_a.dbref(name="foo")
     assert ref_a.name == 'foo'
 
+def test_consistency_nothing():
+    '''
+    Test consistency methods on delete.
+    '''
+    # Test modifier 'NOTHING'
+    obj1 = TestReferenceObject({'x':1}).save()
+    subj1 = TestReferenceSubjectNothing({"ref_field":obj1.dbref(), 'x':1}).save()
+    subj2 = TestReferenceSubjectNothing({"ref_field":obj1.dbref(), 'x':2}).save()
+    obj1.remove()
+    assert TestReferenceObject.collection.find({"x":1}).count() == 0
+    assert TestReferenceSubjectNothing.collection.find({"x":1})[0] == subj1
+    assert TestReferenceSubjectNothing.collection.find({"x":2})[0] == subj2
+
+def test_consistency_deny():
+    # Test modifier 'DENY'
+    obj2 = TestReferenceObject({'x':1}).save()
+    subj3 = TestReferenceSubjectDeny({"ref_field":obj2.dbref(), 'x':1}).save()
+    subj4 = TestReferenceSubjectDeny({"ref_field":obj2.dbref(), 'x':2}).save()
+    with pytest.raises(ExistingReferencesError):
+        obj2.remove()
+    e = ExistingReferencesError("msg")
+    assert isinstance(e.__str__(), str)
+    assert TestReferenceObject.collection.find({"x":1})[0] == obj2
+    assert TestReferenceSubjectDeny.collection.find({"x":1})[0] == subj3
+    assert TestReferenceSubjectDeny.collection.find({"x":2})[0] == subj4
+    TestReferenceSubjectDeny.collection.remove({"$or":[{"x":1},{"x":2}]})
+    assert TestReferenceSubjectDeny.collection.find().count() == 0
+    obj2.remove()
+    assert TestReferenceObject.collection.find().count() == 0
+
+def test_consistency_cascade():
+    # Test modifier 'CASCADE'
+    obj3 = TestReferenceObject({'x':1}).save()
+    subj5 = TestReferenceSubjectCascade({"ref_field":obj3.dbref(), 'x':1}).save()
+    subj6 = TestReferenceSubjectCascade({"ref_field":obj3.dbref(), 'x':2}).save()
+    obj3.remove()
+    assert TestReferenceObject.collection.find().count() == 0
+    assert TestReferenceSubjectCascade.collection.find().count() == 0
+
+def test_consistency_nullify():
+    # Test modifier 'NULLIFY'
+    obj4 = TestReferenceObject({'x':1}).save()
+    subj7 = TestReferenceSubjectNullify({"ref_field":obj4.dbref(), 'x':1}).save()
+    subj8 = TestReferenceSubjectNullify({"ref_field":obj4.dbref(), 'x':2}).save()
+    obj4.remove()
+    assert TestReferenceObject.collection.find().count() == 0
+    assert TestReferenceSubjectNullify.collection.find().count() == 2
+    assert TestReferenceSubjectNullify.collection.find({"ref_field":{"$exists":True}}).count() == 0
 
 def test_db_and_collection_names():
     '''Test the methods that return the current class's DB and
@@ -501,6 +598,14 @@ def test_auto_collection_name():
     assert SomeModel.collection.name == 'some_model'
 
 
+def test_none_database():
+    """Test when db in None"""
+    with pytest.raises(Exception):
+        class TestNoneDatabase(Model):
+            class Meta:
+                collection = "none_database"
+
+
 def test_no_auto_index():
     TestNoAutoIndexModel({'x': 1}).save()
 
@@ -519,6 +624,13 @@ def test_interface_models():
     test_interface_instance.x = 5
     with pytest.raises(Exception):
         test_interface_instance.save()
+
+#    with pytest.raises(Exception):
+#        test_interface_instance.collection.drop()
+    with pytest.raises(Exception):
+        test_interface_instance.collection.find_one()
+    with pytest.raises(Exception):
+        test_interface_instance.collection.find()
 
     test_model_instance = TestModelImplementation()
     test_model_instance.x = 123

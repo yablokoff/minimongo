@@ -41,7 +41,7 @@ def test_configure():
     module = ModuleType('config')
     module.MONGODB_FOO = 'bar'
     module.NON_MONGO_ATTR = 'bar'
-    configure(foo='bar')
+    configure(module)
     assert not hasattr(_Options, 'NON_MONGO_ATTR')
     assert not hasattr(_Options, 'MONGODB_FOO')
     assert hasattr(_Options, 'foo')

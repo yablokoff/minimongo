@@ -110,7 +110,8 @@ class AttrDict(dict):
         if initial:
             for key, value in initial.iteritems():
                 # Can't just say self[k] = v here b/c of recursion.
-                self.__setitem__(key, value)
+                self[key] = value
+                # self.__setitem__(key, value)
 
         # Process the other arguments (assume they are also default values).
         # This is the same behavior as the regular dict constructor.
@@ -167,7 +168,6 @@ class Model(AttrDict):
     >>> foo.bar == 42
     True
     """
-
     __metaclass__ = ModelBase
 
     def __str__(self):
@@ -210,19 +210,22 @@ class Model(AttrDict):
         return DBRef(self._meta.collection, self._id, database, **kwargs)
 
     def remove(self):
-        """Remove this object from the database."""
+        """ Remove this object from the database.
+        Handle all dependent document before remove itself."""
         if self.__class__.backward_references:
             self.remove_backward_refs(self.__class__.backward_references)
         return self.collection.remove(self._id)
 
     def remove_backward_refs(self, backward_refs):
+        """ Handles all documents in dependent Models.
+        Action accordingly to type of the relation."""
         dbref_to_self = self.dbref()
         for backward_ref in backward_refs:
             field_name, backward_ref_cls = backward_ref[0], backward_ref[1]
             if backward_ref[2] == NOTHING:
                 continue
             elif backward_ref[2] == CASCADE:
-                docs = backward_ref_cls.collection.remove({field_name:dbref_to_self})
+                backward_ref_cls.collection.remove({field_name:dbref_to_self})
             else:
                 docs = backward_ref_cls.collection.find({field_name:dbref_to_self})
                 if backward_ref[2] == NULLIFY:
