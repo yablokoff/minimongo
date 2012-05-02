@@ -10,8 +10,9 @@
 .. module:: minimongo
 	 :synopsis: Minimal database Model management for MongoDB.
 
-.. moduleauthor:: Steve Lacy, Dmitrii Vlasov <yablokoff.tlt@gmail.com>
+.. moduleauthor:: Steve Lacy <slacy@gmail.com>
 .. moduleauthor:: Sergei Lebedev <superbobry@gmail.com>
+.. moduleauthor:: Dmitrii Vlasov <yablokoff.tlt@gmail.com>
 
 :Author: Steve Lacy, Dmitrii Vlasov <yablokoff.tlt@gmail.com>
 :Version: |release|
@@ -39,10 +40,10 @@ Features
   the names and types of your fields. ``minimongo`` takes a minimalist and flexible
   approach to schemas.  You can set any value on any Minimongo-derived object.
 
-* **Simple Database consistency**
+* **Simple Database referential integrity**
 
   Although ``minimongo`` doesn't require to pre-declare fields, it has simple
-  facility to maintain data consistency with DBRefs. You can specify relational fields
+  facility to maintain data integrity with DBRefs. You can specify relational fields
   and action on delete - ``NOTHING``, ``NULLIFY``, ``DENY``  and ``CASCADE``.
 
 * **Automatic MongoDB Connection management and connection pooling**
@@ -81,6 +82,7 @@ Contents:
 
    example
    usage
+   comparison
    api
 
 
@@ -91,4 +93,4 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-.. _pymongo: http://api.mongodb.org/python/1.9%2B/index.html
+.. _pymongo: http://api.mongodb.org/python/2.1%2B/index.html

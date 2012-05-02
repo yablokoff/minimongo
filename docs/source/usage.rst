@@ -146,7 +146,7 @@ Adding indices
 
 Indices can be specified per collection, and are created automatically at the
 time your :class:`Model` subclasses are imported, unless stated otherwise
-(via ``auto_index = False`` in the ``Meta`` container). The synax is as follows::
+(via ``auto_index = False`` in the ``Meta`` container). The syntax is as follows::
 
   class Foo(Model):
       class Meta:
@@ -167,6 +167,39 @@ directly to :meth:`pymongo.collection.Collection.ensure_index`. So, please
 see :mod:`pymongo` documentation for :class:`Collection` for the possible
 options to use there.
 
+Referential integrity
+---------------------
+
+To keep referential integrity in database referential constraints can be used.
+Those constraints are defined in Model's Meta class and formed as list of tuples
+in the following format ``(field_name, Model_to_be_referenced, type_of_relation)``.
+Referencing Model should be defined after Model to be referenced and its Meta should
+contain that list in attribute ``references``.
+Type of relation could be one of the followings: ``minimongo.DENY``, ``minimongo.CASCADE``, ``minimongo.NULLIFY``,
+``minimongo.NOTHING``.
+They work as expected, ``NULLIFY`` just remove referencing field from documents.
+Field ``field_name`` should contain DBRefs to referencing objects.
+Complete example could look as follow::
+
+    class Author(Model):
+        class Meta:
+            database = "test"
+            collection = "author"
+
+    class Post(Model):
+        class Meta:
+            database = "test"
+            collection = "post"
+            references = (
+                ("author", Author, CASCADE),
+            ) # field_name : class_name : type
+
+    author = Author(first_name="Lev", last_name="Tolstoy").save()
+    post1 = Post(title = "War and Peace", author = author.dbref(), rating = 5).save()
+    post2 = Post(title = "Anna Karenina", author=author.dbref(), rating = 5).save()
+
+    author.remove()
+    assert Post.collection.find().count() == 0
 
 Additional Info
 ---------------
